@@ -27,8 +27,8 @@ const desktopRouteViewBox = routeSvg.getAttribute("viewBox");
 // Matched contexts own their scroll triggers and clean up on breakpoint changes.
 const mm = gsap.matchMedia();
 mm.add({
-  desktop: "(min-width: 768px) and (prefers-reduced-motion: no-preference)",
-  mobile: "(max-width: 767px) and (prefers-reduced-motion: no-preference)",
+  desktop: "(min-width: 1100px) and (hover: hover) and (prefers-reduced-motion: no-preference)",
+  mobile: "(max-width: 1099px) and (prefers-reduced-motion: no-preference)",
   reduce: "(prefers-reduced-motion: reduce)",
 }, ({ conditions }) => {
   const { desktop, mobile, reduce: reduced } = conditions;
@@ -88,7 +88,7 @@ mm.add({
 
   // Marker fill is the only animated background-size property.
   gsap.utils.toArray(".marker").forEach((el) => gsap.to(el, { backgroundSize: "100% 100%", duration: .7, ease: "power2.out", scrollTrigger: { trigger: el, start: "top 85%", once: true } }));
-  gsap.utils.toArray(".stamp:not(.hero-stamp)").forEach((el) => {
+  gsap.utils.toArray(".stamp:not(.hero-stamp):not(.mini-stamp)").forEach((el) => {
     gsap.fromTo(el, { scale: 1.7, rotation: -14, opacity: 0 }, { scale: 1, rotation: -6, opacity: .95, duration: .3, ease: "power4.in", scrollTrigger: { trigger: el, start: "top 82%", once: true } });
   });
   gsap.utils.toArray(".section-heading").forEach((el) => gsap.from(el.children, { y: 26, opacity: 0, stagger: .08, duration: .55, ease: "power2.out", scrollTrigger: { trigger: el, start: "top 82%", once: true } }));
@@ -109,9 +109,9 @@ mm.add({
     const pathTl = gsap.timeline({ scrollTrigger: { trigger: "#caminho", pin: true, scrub: 1, start: "top top", end: "+=1800", refreshPriority: 1 } });
     pathTl.to(route, { strokeDashoffset: 0, ease: "none", duration: 4 }, 0).to("#route-pencil", { motionPath: { path: "#route", align: "#route", alignOrigin: [.5, .5], autoRotate: true }, ease: "none", duration: 4 }, 0);
     gsap.fromTo(".doc-card", { y: 25, rotation: 5, opacity: .3 }, { y: 0, rotation: 0, opacity: 1, stagger: .25, duration: .5, ease: "back.out(1.4)", scrollTrigger: { trigger: ".path-map", start: "top 60%", once: true } });
-    gsap.fromTo(".red-circles", { strokeDashoffset: 800 }, { strokeDashoffset: 0, duration: 1.6, ease: "none", scrollTrigger: { trigger: ".autopsy-layout", start: "top 65%", once: true } });
+    gsap.utils.toArray(".gline ellipse").forEach((el, i) => gsap.fromTo(el, { strokeDashoffset: 320 }, { strokeDashoffset: 0, duration: .45, delay: i * .22, ease: "none", scrollTrigger: { trigger: ".generic-lines", start: "top 70%", once: true } }));
   } else if (mobile) {
-    gsap.fromTo(".red-circles", { strokeDashoffset: 800 }, { strokeDashoffset: 0, duration: 1.5, ease: "none", scrollTrigger: { trigger: ".autopsy-layout", start: "top 70%", once: true } });
+    gsap.utils.toArray(".gline ellipse").forEach((el, i) => gsap.fromTo(el, { strokeDashoffset: 320 }, { strokeDashoffset: 0, duration: .45, delay: i * .22, ease: "none", scrollTrigger: { trigger: ".generic-lines", start: "top 70%", once: true } }));
     gsap.utils.toArray(".path-stop").forEach((el) => gsap.from(el.querySelectorAll(".stop-number,.doc-card,.postit"), { y: 20, opacity: 0, stagger: .08, duration: .5, scrollTrigger: { trigger: el, start: "top 82%", once: true } }));
   }
 
@@ -128,11 +128,14 @@ const sticky = document.querySelector(".mobile-sticky-cta");
 if (sticky && "IntersectionObserver" in window) {
   let heroPassed = false;
   let offerVisible = false;
-  const syncSticky = () => sticky.classList.toggle("is-visible", heroPassed && !offerVisible);
+  let footerVisible = false;
+  const syncSticky = () => sticky.classList.toggle("is-visible", heroPassed && !offerVisible && !footerVisible);
   const heroObserver = new IntersectionObserver(([entry]) => { heroPassed = !entry.isIntersecting && entry.boundingClientRect.top < 0; syncSticky(); }, { threshold: 0 });
   const offerObserver = new IntersectionObserver(([entry]) => { offerVisible = entry.isIntersecting; syncSticky(); }, { threshold: 0 });
   heroObserver.observe(document.querySelector("#hero"));
   offerObserver.observe(document.querySelector("#oferta"));
+  const footerObserver = new IntersectionObserver(([entry]) => { footerVisible = entry.isIntersecting; syncSticky(); }, { threshold: 0 });
+  footerObserver.observe(document.querySelector(".site-footer"));
 }
 
 // Refresh after web fonts settle so pinned sections use final dimensions.
