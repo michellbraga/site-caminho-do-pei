@@ -5,8 +5,8 @@ export const config = {
   bonusReferenceValue: "R$ 283,30",
   demoMinutes: null,
   checkout: {
-    completo: "https://pay.monetizze.com.br/KTW427935",
-    infantil: "TODO", fund1: "TODO", fund2: "TODO"
+    completo: "https://r.monetizze.com.br/MZU38CK3KAC",
+    infantil: "https://r.monetizze.com.br/MZU38CK3KAC", fund1: "https://r.monetizze.com.br/MZU38CK3KAC", fund2: "https://r.monetizze.com.br/MZU38CK3KAC"
   },
   fallbackCheckout: "completo",
   supportEmail: "TODO",
