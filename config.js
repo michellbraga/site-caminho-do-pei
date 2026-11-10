@@ -4,12 +4,14 @@ export const config = {
   showBonusReference: true,
   bonusReferenceValue: "R$ 283,30",
   demoMinutes: null,
-  checkout: {
-    completo: "https://r.monetizze.com.br/MZU38CK3KAC",
-    infantil: "https://r.monetizze.com.br/MZU38CK3KAC", fund1: "https://r.monetizze.com.br/MZU38CK3KAC", fund2: "https://r.monetizze.com.br/MZU38CK3KAC"
-  },
-  fallbackCheckout: "completo",
-  supportEmail: "TODO",
+  checkoutUrl: "https://r.monetizze.com.br/MZU38CK3KAC",
+  modelsCount: "+200",
+  priceFrom: null,
+  offer: { endsAt: null },
+  heroMockupImage: null,
+  whatsapp: null,
+  supportEmail: null,
+  company: { name: null, cnpj: null },
   testimonialVideos: ["nxpreZ0dcmA", "aDMCF1JQzeQ"],
   fileExamples: ["PEI_TEA_EducacaoInfantil.docx", "PDI_TDAH_Fundamental1.docx", "PAEE_Dislexia_Fundamental2.docx"]
 };
