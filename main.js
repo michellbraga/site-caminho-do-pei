@@ -42,27 +42,8 @@ mm.add({
     return;
   }
 
-  // The hero form is typed in sync on paper and on the screen.
-  const originals = heroTypeValues;
-  if (desktop) {
-    routePath.setAttribute("d", desktopRouteData);
-    routeSvg.setAttribute("viewBox", desktopRouteViewBox);
-    originals.forEach(([el]) => { el.textContent = ""; });
-    const state = { progress: 0 };
-    const fields = [...new Set(originals.map(([el]) => el.dataset.type))];
-    const content = Object.fromEntries(fields.map((key) => [key, originals.find(([el]) => el.dataset.type === key)[1]]));
-    const total = Object.values(content).reduce((sum, value) => sum + value.length, 0);
-    gsap.to(state, { progress: 1, ease: "none", scrollTrigger: { trigger: "#hero", start: "top top", end: "+=1200", scrub: true, pin: true, refreshPriority: 3 }, onUpdate: () => {
-      let chars = Math.round(total * state.progress);
-      for (const key of fields) {
-        const count = Math.max(0, Math.min(content[key].length, chars));
-        document.querySelectorAll(`[data-type="${key}"]`).forEach((el) => { el.textContent = content[key].slice(0, count); });
-        chars -= content[key].length;
-      }
-    }});
-    gsap.fromTo(".hero-stamp", { scale: 1.8, rotation: -14, opacity: 0 }, { scale: 1, rotation: -5, opacity: .95, duration: .3, ease: "power4.in", scrollTrigger: { trigger: "#hero", start: "top+=1100 top", toggleActions: "play none none none" } });
-    gsap.to(".desk-scene", { y: -12, ease: "none", scrollTrigger: { trigger: "#hero", start: "top top", end: "bottom top", scrub: true } });
-  } else if (mobile) {
+  // The hero stays static; no pin or scroll-driven form typing.
+  if (mobile) {
     const mobileRoute = document.querySelector("#route");
     mobileRoute.setAttribute("d", "M25 8 C3 90 47 150 25 235 S5 390 25 475 S47 630 25 740");
     document.querySelector(".route-svg").setAttribute("viewBox", "0 0 50 760");
@@ -70,25 +51,10 @@ mm.add({
     gsap.set(mobileRoute, { strokeDasharray: mobileLength, strokeDashoffset: mobileLength });
     gsap.to(mobileRoute, { strokeDashoffset: 0, duration: 2.8, ease: "none", scrollTrigger: { trigger: ".path-map", start: "top 76%", once: true } });
     gsap.to("#route-pencil", { motionPath: { path: "#route", align: "#route", alignOrigin: [.5, .5], autoRotate: true }, duration: 2.8, ease: "none", scrollTrigger: { trigger: ".path-map", start: "top 76%", once: true } });
-    originals.forEach(([el]) => { el.textContent = ""; });
-    const values = Object.fromEntries([...new Set(originals.map(([el]) => el.dataset.type))].map((key) => [key, originals.find(([el]) => el.dataset.type === key)[1]]));
-    const fields = Object.keys(values);
-    const total = Object.values(values).reduce((sum, value) => sum + value.length, 0);
-    const state = { progress: 0 };
-    gsap.to(state, { progress: 1, duration: 2.4, ease: "none", scrollTrigger: { trigger: ".hero-paper", start: "top 78%", once: true }, onUpdate: () => {
-      let chars = Math.round(total * state.progress);
-      for (const key of fields) {
-        const count = Math.max(0, Math.min(values[key].length, chars));
-        document.querySelectorAll(`[data-type="${key}"]`).forEach((el) => { el.textContent = values[key].slice(0, count); });
-        chars -= values[key].length;
-      }
-    }});
-    gsap.fromTo(".hero-stamp", { scale: 1.6, rotation: -12, opacity: 0 }, { scale: 1, rotation: -5, opacity: .95, duration: .35, ease: "power4.in", scrollTrigger: { trigger: ".hero-paper", start: "top 70%", once: true } });
-  }
-
+  } else { routePath.setAttribute("d", desktopRouteData); routeSvg.setAttribute("viewBox", desktopRouteViewBox); }
   // Marker fill is the only animated background-size property.
   gsap.utils.toArray(".marker").forEach((el) => gsap.to(el, { backgroundSize: "100% 100%", duration: .7, ease: "power2.out", scrollTrigger: { trigger: el, start: "top 85%", once: true } }));
-  gsap.utils.toArray(".stamp:not(.hero-stamp):not(.mini-stamp)").forEach((el) => {
+  gsap.utils.toArray(".stamp:not(.hero-stamp):not(.mini-stamp):not(.update-stamp):not(.mini-stamp)").forEach((el) => {
     gsap.fromTo(el, { scale: 1.7, rotation: -14, opacity: 0 }, { scale: 1, rotation: -6, opacity: .95, duration: .3, ease: "power4.in", scrollTrigger: { trigger: el, start: "top 82%", once: true } });
   });
   gsap.utils.toArray(".section-heading").forEach((el) => gsap.from(el.children, { y: 26, opacity: 0, stagger: .08, duration: .55, ease: "power2.out", scrollTrigger: { trigger: el, start: "top 82%", once: true } }));
@@ -193,27 +159,23 @@ faqItems.forEach((item) => { item.querySelector(".faq-answer").setAttribute("ari
   faqItems.forEach((card) => card.querySelector(".faq-answer").setAttribute("aria-hidden", String(card !== item || open)));
 }); });
 
-// Every checkout destination comes from config.js. Unconfirmed stage links stay unavailable.
-const checkoutButton = document.querySelector(".checkout-link");
-document.querySelectorAll("[data-offer]").forEach((button) => button.addEventListener("click", () => {
-  document.querySelectorAll("[data-offer]").forEach((item) => { item.classList.toggle("is-selected", item === button); item.setAttribute("aria-pressed", String(item === button)); });
-  const selectedDestination = config.checkout[button.dataset.offer];
-  const destination = selectedDestination && selectedDestination !== "TODO"
-    ? selectedDestination
-    : config.checkout[config.fallbackCheckout];
-  if (destination && destination !== "TODO") {
-    checkoutButton.href = destination; checkoutButton.removeAttribute("aria-disabled"); checkoutButton.classList.remove("is-disabled");
-  } else {
-    checkoutButton.removeAttribute("href"); checkoutButton.setAttribute("aria-disabled", "true"); checkoutButton.classList.add("is-disabled");
-  }
-}));
+// Static checkout links work without JavaScript and stay synchronized to config.
+document.querySelectorAll("[data-cta]").forEach((link) => { link.href = config.checkoutUrl; link.removeAttribute("target"); link.rel = "noopener"; });
+
 if (config.showBonusReference) document.querySelector(".receipt-reference").hidden = false;
 document.querySelector(".receipt-reference").textContent = `Os 7 bônus têm valor de referência de ${config.bonusReferenceValue}.`;
 if (config.demoMinutes !== null) document.querySelector(".demo-time").textContent = `Preenchido em ${config.demoMinutes} minutos.`;
 else document.querySelector(".demo-time").textContent = "Do campo vazio ao plano completo.";
-if (config.supportEmail !== "TODO") {
-  const support = document.querySelector(".support-link"); support.href = `mailto:${config.supportEmail}`; support.textContent = config.supportEmail;
-} else document.querySelector(".support-link").removeAttribute("href");
+const supportEmail = document.querySelector(".support-email-row");
+if (config.supportEmail && supportEmail) { supportEmail.href = `mailto:${config.supportEmail}`; supportEmail.textContent = config.supportEmail; supportEmail.hidden = false; }
+const whatsappLink = document.querySelector(".whatsapp-row");
+if (config.whatsapp && whatsappLink) { whatsappLink.href = config.whatsapp; whatsappLink.hidden = false; }
+const companyLegal = document.querySelector(".company-legal");
+if (config.company?.name && config.company?.cnpj && companyLegal) { companyLegal.textContent = `${config.company.name} · CNPJ ${config.company.cnpj}`; companyLegal.hidden = false; }
+const priceFrom = document.querySelector(".price-from");
+if (config.priceFrom && priceFrom) { priceFrom.textContent = `De R$ ${config.priceFrom}`; priceFrom.hidden = false; }
+const bonusReference = document.querySelector(".bonus-reference");
+if (config.showBonusReference && bonusReference) bonusReference.hidden = false;
 
 // One click loads each YouTube embed, avoiding third-party requests before consent.
 document.querySelector(".video-note")?.addEventListener("click", (event) => {
@@ -229,3 +191,62 @@ document.querySelector(".video-note")?.addEventListener("click", (event) => {
 // Update the pencil shaped progress marker along the document.
 const progressPencil = document.querySelector(".progress-pencil");
 if (!reduce && progressPencil) gsap.to(progressPencil, { y: () => Math.max(0, document.querySelector(".progress-rail").clientHeight - 60), ease: "none", scrollTrigger: { trigger: document.body, start: "top top", end: "bottom bottom", scrub: .3 } });
+
+// Optional real offer deadline; null leaves the banner hidden.
+const deadlineBanner = document.querySelector(".offer-deadline");
+if (deadlineBanner && config.offer?.endsAt) {
+  const deadline = new Date(config.offer.endsAt).getTime();
+  if (Number.isFinite(deadline) && deadline > Date.now()) {
+    const dateLabel = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }).format(deadline);
+    deadlineBanner.hidden = false;
+    const updateDeadline = () => {
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) { deadlineBanner.hidden = true; clearInterval(deadlineTimer); return; }
+      const hours = Math.floor(remaining / 3600000);
+      const minutes = Math.floor((remaining % 3600000) / 60000);
+      const seconds = Math.floor((remaining % 60000) / 1000);
+      deadlineBanner.textContent = `Condição especial até ${dateLabel} · ${String(hours).padStart(2,"0")}:${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`;
+    };
+    updateDeadline();
+    const deadlineTimer = setInterval(updateDeadline, 1000);
+  }
+}
+
+// Type the example once after the mockup entrance.
+if (!reduce) {
+  const typeFields = [...document.querySelectorAll(".hero-word-page [data-type]")].map((el) => ({ el, text: el.textContent, row: el.closest(".mock-field") }));
+  if (typeFields.length) {
+    typeFields.forEach(({ el }) => { el.textContent = ""; });
+    const typing = gsap.timeline({ delay: 1.2 });
+    typeFields.forEach(({ el, text, row }) => {
+      typing.add(() => row.classList.add("is-typing"));
+      const state = { chars: 0 };
+      typing.to(state, { chars: text.length, duration: Math.max(.25, text.length * .028), ease: "none", onUpdate: () => { el.textContent = text.slice(0, Math.floor(state.chars)); } });
+      typing.add(() => row.classList.remove("is-typing"));
+    });
+    typing.fromTo(".hero-stamp", { scale: 1.55, rotation: -12, opacity: 0 }, { scale: 1, rotation: -5, opacity: .95, duration: .28, ease: "power4.in" });
+  }
+}
+
+// Hero mockup motion only; copy and LCP heading remain visible from the first frame.
+const heroStage = document.querySelector(".hero-stage");
+if (!reduce && heroStage) {
+  const entrance = gsap.timeline({ defaults: { ease: "power3.out" } });
+  entrance.from(".hero-glow", { opacity: 0, duration: .55 })
+    .from(".fan-sheet", { y: 24, scale: .92, rotation: 0, opacity: 0, stagger: .08, duration: .55 }, 0)
+    .from(".hero-laptop", { y: 38, opacity: 0, duration: .55 }, .18)
+    .from(".hero-tablet", { x: 25, opacity: 0, duration: .45 }, .35)
+    .from(".hero-phone", { x: -20, opacity: 0, duration: .45 }, .35)
+    .from(".hero-bonus", { y: -22, rotation: 0, opacity: 0, stagger: .06, duration: .42, ease: "back.out(1.5)" }, .6)
+    .from(".models-seal,.gift-seal,.update-stamp", { scale: .65, rotation: -12, opacity: 0, stagger: .12, duration: .35, ease: "back.out(1.7)" }, .9)
+    .from(".hero-primary-cta", { y: 14, opacity: 0, duration: .35 }, 1.25);
+  const heroObserver = new IntersectionObserver(([entry]) => { heroStage.classList.toggle("is-in-view", entry.isIntersecting); }, { threshold: .05 });
+  heroObserver.observe(heroStage);
+  if (window.matchMedia("(min-width: 1100px) and (hover: hover)").matches) {
+    const layers = [...heroStage.querySelectorAll(".hero-laptop[data-depth]")].map((el) => ({ el, depth: Number(el.dataset.depth), x: gsap.quickTo(el, "x", { duration: .35, ease: "power2.out" }), y: gsap.quickTo(el, "y", { duration: .35, ease: "power2.out" }) }));
+    heroStage.addEventListener("pointermove", (event) => { const r = heroStage.getBoundingClientRect(); const px = (event.clientX - r.left) / r.width - .5; const py = (event.clientY - r.top) / r.height - .5; layers.forEach((layer) => { layer.x(px * layer.depth); layer.y(py * layer.depth); }); });
+    heroStage.addEventListener("pointerleave", () => layers.forEach((layer) => { layer.x(0); layer.y(0); }));
+  }
+  const shine = document.querySelector(".hero-cta-shine");
+  if (shine) gsap.fromTo(shine, { xPercent: -180, opacity: 0 }, { xPercent: 260, opacity: .6, duration: .7, delay: 1.6, ease: "power1.inOut" });
+}
